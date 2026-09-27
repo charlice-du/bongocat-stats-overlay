@@ -4,7 +4,7 @@ English · [简体中文](#简体中文)
 
 A small **Windows-only** companion for [ayangweb/BongoCat](https://github.com/ayangweb/BongoCat). It adds a transparent, click-through `Keys` / `KPS` badge near the cat's lower-left corner without modifying BongoCat.
 
-This branch is a **v0.2.0 development preview**, not a release. The latest tagged release is v0.1.0, tested manually with BongoCat v1.1.0 and Python 3.13 on Windows. CI runs unit tests on Python 3.10–3.13; the new scaling option still needs visual testing.
+Version **0.2.0** has passed manual QA with BongoCat v1.1.0 and Python 3.13 on Windows, covering scaling, tray shortcuts, mouse-counting mode, and invalid-config fallback. CI runs unit tests on Python 3.10–3.13; end-to-end GUI behavior on other Python and BongoCat versions has not been verified.
 
 ![BongoCat with the Keys and KPS badge](assets/demo.png)
 
@@ -74,7 +74,7 @@ MIT license. Some Win32 helpers are adapted from Bel1eve-qiu/desktop-pet under M
 
 这是一个仅适用于 Windows 的 [ayangweb/BongoCat](https://github.com/ayangweb/BongoCat) 配套小工具。它会在猫咪左下角显示透明、可鼠标穿透的 `Keys` / `KPS` 统计条。
 
-此分支是 **v0.2.0 开发预览版**，尚未正式发布。最新的正式版本是 v0.1.0，已在 Windows 上使用 BongoCat v1.1.0 和 Python 3.13 进行人工实机测试。CI 会在 Python 3.10–3.13 上运行单元测试；新增的缩放选项仍需要实机目视检查。
+**0.2.0** 版已在 Windows 上使用 BongoCat v1.1.0 和 Python 3.13 完成人工验收，覆盖缩放、托盘入口、鼠标计数开关和无效配置回退。CI 会在 Python 3.10–3.13 上运行单元测试；其他 Python 和 BongoCat 版本的完整图形界面行为尚未验证。
 
 ### 统计内容
 
