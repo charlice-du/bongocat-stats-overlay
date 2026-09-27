@@ -1,5 +1,6 @@
 """Transparent click-through badge and its long-lived hidden controller."""
 
+import os
 import queue
 import time
 import tkinter as tk
@@ -8,6 +9,7 @@ from threading import Thread
 
 from .config import load_config
 from .input_counter import InputCounter, KEYBOARD_VKS, MOUSE_BUTTON_VKS
+from .layout import badge_metrics
 from .lifecycle import BadgeLifecycle
 from .storage import load_total, save_total, user_data_dir
 from .window_tracker import find_bongocat
@@ -19,7 +21,6 @@ from .windows_api import (attach_owner, hwnd_of, key_down,
 POLL_MS = 25
 ATTACH_SECONDS = 0.20
 SAVE_SECONDS = 5.0
-BADGE_WIDTH, BADGE_HEIGHT = 170, 50
 TRANSPARENT = "#ff00ff"
 
 
@@ -34,8 +35,9 @@ class TkBadge:
         self.window.configure(bg=TRANSPARENT)
         self.window.attributes("-transparentcolor", TRANSPARENT)
         self.window.attributes("-topmost", True)
-        self.canvas = tk.Canvas(self.window, width=BADGE_WIDTH,
-                                height=BADGE_HEIGHT, bg=TRANSPARENT,
+        self.metrics = badge_metrics(config.scale)
+        self.canvas = tk.Canvas(self.window, width=self.metrics.width,
+                                height=self.metrics.height, bg=TRANSPARENT,
                                 highlightthickness=0)
         self.canvas.pack()
         self.config = config
@@ -62,7 +64,8 @@ class TkBadge:
         y = cat.bottom + self.config.offset_y
         geometry = (x, y)
         if geometry != self._geometry:
-            self.window.geometry(f"{BADGE_WIDTH}x{BADGE_HEIGHT}+{x}+{y}")
+            self.window.geometry(
+                f"{self.metrics.width}x{self.metrics.height}+{x}+{y}")
             self._geometry = geometry
         if not self._shown:
             self.window.deiconify()
@@ -86,15 +89,18 @@ class TkBadge:
             return
         self._display = display
         self.canvas.delete("all")
-        self.canvas.create_rectangle(0, 0, BADGE_WIDTH, BADGE_HEIGHT,
+        metrics = self.metrics
+        self.canvas.create_rectangle(0, 0, metrics.width, metrics.height,
                                      fill="#282b36", outline="#575c68",
-                                     width=1)
-        self.canvas.create_text(11, 14, anchor="w", fill="#f3f4f6",
+                                     width=metrics.border_width)
+        self.canvas.create_text(metrics.label_x, metrics.total_y,
+                                anchor="w", fill="#f3f4f6",
                                 text=f"Keys  {total:,}",
-                                font=("Segoe UI", 10, "bold"))
-        self.canvas.create_text(11, 36, anchor="w", fill="#ffd166",
+                                font=("Segoe UI", metrics.font_size, "bold"))
+        self.canvas.create_text(metrics.label_x, metrics.kps_y,
+                                anchor="w", fill="#ffd166",
                                 text=f"KPS   {kps}",
-                                font=("Segoe UI", 10, "bold"))
+                                font=("Segoe UI", metrics.font_size, "bold"))
 
     def close(self):
         try:
@@ -109,10 +115,12 @@ class StatsApp:
         set_dpi_aware()
         self.data_dir = user_data_dir()
         self.stats_path = self.data_dir / "stats.json"
+        self.config_path = self.data_dir / "config.json"
         loaded = load_total(self.stats_path)
-        configured = load_config(self.data_dir / "config.json")
-        self.counter = InputCounter(loaded.total)
+        configured = load_config(self.config_path)
         self.config = configured.config
+        self.counter = InputCounter(
+            loaded.total, count_mouse_clicks=self.config.count_mouse_clicks)
 
         # This root must never be owned by BongoCat. It survives cat restarts.
         self.root = tk.Tk()
@@ -149,8 +157,13 @@ class StatsApp:
         icon = Image.new("RGB", (64, 64), "#282b36")
         pen = ImageDraw.Draw(icon)
         pen.text((11, 20), "KPS", fill="white")
-        menu = pystray.Menu(pystray.MenuItem(
-            "Exit Stats Overlay", lambda *_: self.commands.put("quit")))
+        menu = pystray.Menu(
+            pystray.MenuItem(
+                "Open Config", lambda *_: self.commands.put("open_config")),
+            pystray.MenuItem(
+                "Open Data Folder", lambda *_: self.commands.put("open_data")),
+            pystray.MenuItem(
+                "Exit Stats Overlay", lambda *_: self.commands.put("quit")))
         self.tray = pystray.Icon("bongocat-stats-overlay", icon,
                                  "BongoCat Stats Overlay", menu)
         Thread(target=self.tray.run, daemon=True).start()
@@ -164,17 +177,30 @@ class StatsApp:
                 messagebox.showerror("Could not save statistics", str(error))
                 self._reported_save_error = True
 
+    @staticmethod
+    def _open_path(path, title):
+        try:
+            os.startfile(str(path))
+        except OSError as error:
+            messagebox.showerror(title, str(error))
+
     def _tick(self):
         if self._stopped:
             return
         while not self.commands.empty():
-            if self.commands.get_nowait() == "quit":
+            command = self.commands.get_nowait()
+            if command == "quit":
                 self.quit()
                 return
+            if command == "open_config":
+                self._open_path(self.config_path, "Could not open config")
+            elif command == "open_data":
+                self._open_path(self.data_dir, "Could not open data folder")
 
         now = time.monotonic()
         keys = {vk for vk in KEYBOARD_VKS if key_down(vk)}
-        mouse = {vk for vk in MOUSE_BUTTON_VKS if key_down(vk)}
+        mouse = ({vk for vk in MOUSE_BUTTON_VKS if key_down(vk)}
+                 if self.config.count_mouse_clicks else set())
         self.counter.sample(keys, mouse, now)
 
         if now - self._last_attach >= ATTACH_SECONDS:
