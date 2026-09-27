@@ -23,8 +23,9 @@ MOUSE_BUTTON_VKS = (0x01, 0x02, 0x04, 0x05, 0x06)  # L/R/M/X1/X2
 class InputCounter:
     """Count new down-edges; KPS uses only keyboard edges in the last second."""
 
-    def __init__(self, total=0):
+    def __init__(self, total=0, count_mouse_clicks=True):
         self.total = max(0, int(total))
+        self.count_mouse_clicks = count_mouse_clicks
         self._previous_keys = set()
         self._previous_mouse = set()
         self._recent_keys = deque()
@@ -36,12 +37,13 @@ class InputCounter:
         mouse_hits = len(mouse_buttons - self._previous_mouse)
         self._previous_keys = keys
         self._previous_mouse = mouse_buttons
-        self.total += key_hits + mouse_hits
+        counted_mouse_hits = mouse_hits if self.count_mouse_clicks else 0
+        self.total += key_hits + counted_mouse_hits
         self._recent_keys.extend([now] * key_hits)
         cutoff = now - 1.0
         while self._recent_keys and self._recent_keys[0] <= cutoff:
             self._recent_keys.popleft()
-        return key_hits + mouse_hits
+        return key_hits + counted_mouse_hits
 
     @property
     def kps(self):

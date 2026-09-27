@@ -26,6 +26,14 @@ class InputCounterTests(unittest.TestCase):
         self.assertEqual(counter.sample(set(), set(), 3), 0)
         self.assertEqual(counter.sample(set(), {0x02}, 4), 1)
 
+    def test_mouse_toggle_keeps_existing_total_and_keyboard_kps(self):
+        counter = InputCounter(100, count_mouse_clicks=False)
+        self.assertEqual(counter.sample({0x41}, {0x01}, 1.0), 1)
+        self.assertEqual((counter.total, counter.kps), (101, 1))
+        self.assertEqual(counter.sample(set(), set(), 1.1), 0)
+        self.assertEqual(counter.sample(set(), {0x01}, 1.2), 0)
+        self.assertEqual((counter.total, counter.kps), (101, 1))
+
     def test_key_set_matches_legacy_without_duplicate_modifiers(self):
         self.assertEqual(len(KEYBOARD_VKS), 103)
         self.assertEqual(len(set(KEYBOARD_VKS)), len(KEYBOARD_VKS))
