@@ -132,14 +132,14 @@ class StatsApp:
 
         if loaded.corrupt_backup is not None:
             self.root.after(100, lambda: messagebox.showwarning(
-                "统计数据已备份",
-                "原统计文件无法读取，已保留在：\n"
-                f"{loaded.corrupt_backup}\n\n本次从 0 开始计数。"))
+                "Statistics file backed up",
+                "The statistics file could not be read. A backup was saved at:\n"
+                f"{loaded.corrupt_backup}\n\nCounting starts from 0."))
         if configured.warning is not None:
             self.root.after(200, lambda: messagebox.showwarning(
-                "位置配置无效",
-                "config.json 未被改写，本次使用默认位置。\n"
-                f"原因：{configured.warning}"))
+                "Invalid position settings",
+                "config.json was not changed. Using the default position.\n"
+                f"Reason: {configured.warning}"))
         self.root.after(0, self._tick)
 
     def _start_tray(self):
@@ -150,9 +150,9 @@ class StatsApp:
         pen = ImageDraw.Draw(icon)
         pen.text((11, 20), "KPS", fill="white")
         menu = pystray.Menu(pystray.MenuItem(
-            "退出按键统计", lambda *_: self.commands.put("quit")))
+            "Exit Stats Overlay", lambda *_: self.commands.put("quit")))
         self.tray = pystray.Icon("bongocat-stats-overlay", icon,
-                                 "BongoCat 按键统计", menu)
+                                 "BongoCat Stats Overlay", menu)
         Thread(target=self.tray.run, daemon=True).start()
 
     def _save(self):
@@ -161,7 +161,7 @@ class StatsApp:
             self._reported_save_error = False
         except OSError as error:
             if not self._reported_save_error:
-                messagebox.showerror("统计数据无法保存", str(error))
+                messagebox.showerror("Could not save statistics", str(error))
                 self._reported_save_error = True
 
     def _tick(self):
@@ -186,7 +186,7 @@ class StatsApp:
                 details = str(error)
                 if details != self._reported_attach_error:
                     self._reported_attach_error = details
-                    messagebox.showwarning("无法贴附 BongoCat", details)
+                    messagebox.showwarning("Could not attach to BongoCat", details)
             self._last_attach = now
         try:
             self.lifecycle.draw(self.counter.total, self.counter.kps)

@@ -17,7 +17,8 @@ def main():
     if mutex is None:
         root = tk.Tk()
         root.withdraw()
-        messagebox.showinfo("按键统计已在运行", "请查看系统托盘中的 KPS 图标。")
+        messagebox.showinfo("Stats Overlay is already running",
+                            "Check the KPS icon in the system tray.")
         root.destroy()
         return 0
 
@@ -28,7 +29,8 @@ def main():
         except Exception as error:
             root = tk.Tk()
             root.withdraw()
-            messagebox.showerror("BongoCat Stats Overlay 启动失败", str(error))
+            messagebox.showerror("Failed to start BongoCat Stats Overlay",
+                                 str(error))
             root.destroy()
             return 1
     finally:

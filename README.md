@@ -2,7 +2,7 @@
 
 A small **Windows-only** companion for [ayangweb/BongoCat](https://github.com/ayangweb/BongoCat). It adds a transparent, click-through `Keys` / `KPS` badge near the cat's lower-left corner without modifying BongoCat. This project is independent and is not affiliated with the upstream BongoCat project.
 
-Version **0.1.0** has been tested with BongoCat v1.1.0 and Python 3.13 on Windows. Other BongoCat versions and Python versions have not yet been verified.
+Version **0.1.0** has been tested manually with BongoCat v1.1.0 and Python 3.13 on Windows. CI runs unit tests on Python 3.10–3.13; other BongoCat versions and end-to-end GUI behavior on other Python versions have not been verified.
 
 ![BongoCat with the Keys and KPS badge](assets/demo.png)
 
@@ -24,7 +24,7 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m bongocat_stats_overlay
 ```
 
-After installation, `start.bat` starts the same app without a console. Use its `KPS` system-tray icon → **退出按键统计** to save and quit. Starting it twice will not start a second counter.
+After installation, `start.bat` starts the same app without a console. Use its `KPS` system-tray icon → **Exit Stats Overlay** to save and quit. Starting it twice will not start a second counter.
 
 The program waits quietly if BongoCat is not yet running. If the cat closes and reopens, the badge is recreated and attached to its new window. It does not attach to the similarly named Steam BongoCat.
 
@@ -45,8 +45,6 @@ Runtime state is stored locally in `%LOCALAPPDATA%\BongoCatStatsOverlay\`:
 ```
 
 The badge's top-left corner is positioned relative to BongoCat's bottom-left corner. Edit the two integer offsets and restart the overlay to move it. If `stats.json` is malformed, the original is preserved as `stats.corrupt-*.json` and a new total begins at zero; it is **not** silently overwritten. The file format is `{"total": 1234}`. An abrupt power loss may lose up to about five seconds of recent counts.
-
-If migrating from the earlier `FullKeyboardBongoCat` prototype, quit that old stats helper first. Copy its current `keyboard_stats.json` total into the new `stats.json` before starting this program. Keep the old file as a backup and do not run both helpers at once.
 
 ## Privacy and limitations
 
